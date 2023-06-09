@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const { Client, GatewayIntentBits } = require("discord.js");
+const eventHandeler = require('./handlers/eventHandeler');
 
 const client = new Client({
   intents: [
@@ -11,9 +12,6 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ],
 });
-
-client.once('ready', () => {
-    console.log('Minecraftbot is online!')
-})
+eventHandeler(client);
 
 client.login(process.env.DISCORD_TOKEN);
