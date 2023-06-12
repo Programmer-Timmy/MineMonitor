@@ -1,4 +1,6 @@
 const mcs = require("node-mcstatus");
+const con = require("../../utils/databaseConection.js");
+
 const {
   Client,
   Interaction,
@@ -43,13 +45,16 @@ module.exports = {
     mcs
       .statusJava(serverIp, port, options)
       .then((result) => {
+        let color;
+        if (result["online"] == false) {
+          color = 15548997;
+        } else {
+          color = 5763719;
+        }
         const resultData = result;
-        
-        console.log(result);
 
-        if (resultData['online'] === false) {collor = 15548997}
+        console.log(resultData);
         if (resultData["online"] === true) {
-          
           let playerData = resultData["players"]["list"].map((element) => {
             return element.name_clean;
           });
@@ -58,8 +63,8 @@ module.exports = {
             playerData = " ";
           }
 
-          const online = new EmbedBuilder()
-            .setColor(collor)
+          const status = new EmbedBuilder()
+            .setColor(color)
             .setTitle(`Status van ${resultData["host"]}`)
             .setDescription(":green_circle: Server is online")
             .setThumbnail(
@@ -83,11 +88,12 @@ module.exports = {
                 value: `${resultData["motd"]["clean"]}`,
               }
             )
+
             .setTimestamp();
-          interaction.reply({ embeds: [online] });
+          interaction.reply({ embeds: [status] });
         } else {
-          const offline = new EmbedBuilder()
-            .setColor(collor)
+          const status1 = new EmbedBuilder()
+            .setColor(color)
             .setTitle(`Status van ${resultData["host"]}`)
             .setDescription(":red_circle: Server is offline")
             .addFields({
