@@ -13,6 +13,7 @@
     "discord.js": "^14.11.0",
     "dotenv": "^16.1.4",
     "minecraft-server-util": "^5.4.4",
+    "mysql": "^2.18.1",
     "node-mcstatus": "^1.1.0"
   }
 }
