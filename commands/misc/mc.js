@@ -39,54 +39,68 @@ module.exports = {
     const serverIp = interaction.options.get("server_ip").value;
     const port = interaction.options.get("port").value;
     let resultData;
-
+    let collor = 5763719;
     mcs
       .statusJava(serverIp, port, options)
       .then((result) => {
         const resultData = result;
-        console.log(resultData);
-        let playerData = resultData["players"]["list"].map((element) => {
-          return element.name_clean;
-        });
-
-        if (resultData["players"]["list"].length === 0) {
-          playerData = " ";
-        }
         
-        const status = new EmbedBuilder()
-          .setColor(5763719)
-          .setTitle(`Status van ${resultData['host']}`)
-          .setDescription(":green_circle: Server is online")
-          .addFields(
-            {
-              name: "Versie",
-              value: `${resultData["version"]["name_clean"]}`,
-            },
-            {
-              name: `Spelers online: ${resultData["players"]["online"]}`,
-              value: `${playerData}`,
-            },
-            {
-              name: "Max spelers",
-              value: `${resultData['players']['max']}`,
-            },
-            {
-                name: "Motd",
-                value: `${resultData['motd']['clean']}`
-            }
-          )
+        console.log(result);
 
-          .setTimestamp();
-        interaction.reply({ embeds: [status] });
-        // https://mcstatus.io/docs#java-status
+        if (resultData['online'] === false) {collor = 15548997}
+        if (resultData["online"] === true) {
+          
+          let playerData = resultData["players"]["list"].map((element) => {
+            return element.name_clean;
+          });
+
+          if (resultData["players"]["list"].length === 0) {
+            playerData = " ";
+          }
+
+          const online = new EmbedBuilder()
+            .setColor(collor)
+            .setTitle(`Status van ${resultData["host"]}`)
+            .setDescription(":green_circle: Server is online")
+            .setThumbnail(
+              `https://api.mcstatus.io/v2/icon/${resultData["host"]}`
+            )
+            .addFields(
+              {
+                name: "Versie",
+                value: `${resultData["version"]["name_clean"]}`,
+              },
+              {
+                name: `Spelers online: ${resultData["players"]["online"]}`,
+                value: `${playerData}`,
+              },
+              {
+                name: "Max spelers",
+                value: `${resultData["players"]["max"]}`,
+              },
+              {
+                name: "Motd",
+                value: `${resultData["motd"]["clean"]}`,
+              }
+            )
+            .setTimestamp();
+          interaction.reply({ embeds: [online] });
+        } else {
+          const offline = new EmbedBuilder()
+            .setColor(collor)
+            .setTitle(`Status van ${resultData["host"]}`)
+            .setDescription(":red_circle: Server is offline")
+            .addFields({
+              name: " ",
+              value: `Stuur een bericht naar de server owner!`,
+            })
+            .setTimestamp();
+          interaction.reply({ embeds: [offline] });
+
+        }
       })
       .catch((error) => {
-        // If the server is offline, then
-        // you will NOT receive an error here.
-        // Instead, you will use the `result.online`
-        // boolean values in `.then()`.
-        // Receiving an error here means that there
-        // was an error with the service itself.
+        console.log(error);
       });
   },
 };
