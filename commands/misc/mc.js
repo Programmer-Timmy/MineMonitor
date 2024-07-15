@@ -1,35 +1,31 @@
-const mcs = require("node-mcstatus");
-const con = require("../../utils/databaseConection.js");
-
+const mcs = require('node-mcstatus');
+const db = require('../../utils/databaseConnection.js');
 const {
   Client,
   Interaction,
   ApplicationCommandOptionType,
   EmbedBuilder,
-} = require("discord.js");
+} = require('discord.js');
 
 const options = { query: true };
 
 module.exports = {
-  name: "mc",
-  description: "pings my mc server!",
-  // devOnly: Boolean,
+  name: 'mc',
+  description: 'pings my mc server!',
   testOnly: false,
-  // options: Object[],
   deleted: false,
-
   options: [
     {
-      name: "server_ip",
-      description: "The ip of the server",
+      name: 'server_ip',
+      description: 'The ip of the Minecraft server',
       required: true,
       type: ApplicationCommandOptionType.String,
     },
     {
-      name: "port",
-      description: "The port of the server",
+      name: 'port',
+      description: 'The port of the Minecraft server',
       required: true,
-      type: ApplicationCommandOptionType.Number,
+      type: ApplicationCommandOptionType.Integer,
     },
   ],
   /**
@@ -37,76 +33,164 @@ module.exports = {
    * @param {Client} client
    * @param {Interaction} interaction
    */
-  callback: (client, interaction) => {
-    const serverIp = interaction.options.get("server_ip").value;
-    const port = interaction.options.get("port").value;
-    let resultData;
-    let collor = 5763719;
-    mcs
-      .statusJava(serverIp, port, options)
-      .then((result) => {
-        let color;
-        if (result["online"] == false) {
-          color = 15548997;
-        } else {
-          color = 5763719;
+  callback: async (client, interaction) => {
+    console.log('mc command called');
+
+    const serverIp = interaction.options.get('server_ip').value;
+    const port = interaction.options.get('port').value;
+
+    const guildId = interaction.guildId; // Get the Discord server (Guild) ID
+    const channelId = interaction.channelId;
+
+    // if the server is already in the database, delete the old message and add a new one
+    const serverInDatabase = await checkServerInDatabase(guildId);
+    if (serverInDatabase) {
+      try {
+        await deleteServerFromDatabase(guildId)
+        const channel = await client.channels.fetch(serverInDatabase.channelId);
+        const message = await channel.messages.fetch(serverInDatabase.messageId);
+        if (message) {
+          await message.delete();
         }
+      } catch (error) {
+        console.error('Error deleting old message:', error);
+      }
+    }
+
+      try {
+        let result = await mcs.statusJava(serverIp, port, options);
+        let color = result['online'] ? 5763719 : 15548997;
+
         const resultData = result;
 
-        console.log(resultData);
-        if (resultData["online"] === true) {
-          let playerData = resultData["players"]["list"].map((element) => {
-            return element.name_clean;
-          });
+        if (resultData['online']) {
+          let playerData = resultData['players']['list']
+              .map((element) => {
+                return '- ' + element.name_clean;
+              })
+              .join('\n');
 
-          if (resultData["players"]["list"].length === 0) {
-            playerData = " ";
+          if (resultData['players']['list'].length === 0) {
+            playerData = ' ';
           }
 
           const status = new EmbedBuilder()
-            .setColor(color)
-            .setTitle(`Status van ${resultData["host"]}`)
-            .setDescription(":green_circle: Server is online")
-            .setThumbnail(
-              `https://api.mcstatus.io/v2/icon/${resultData["host"]}`
-            )
-            .addFields(
-              {
-                name: "Versie",
-                value: `${resultData["version"]["name_clean"]}`,
-              },
-              {
-                name: `Spelers online: ${resultData["players"]["online"]}`,
-                value: `${playerData}`,
-              },
-              {
-                name: "Max spelers",
-                value: `${resultData["players"]["max"]}`,
-              },
-              {
-                name: "Motd",
-                value: `${resultData["motd"]["clean"]}`,
-              }
-            )
+              .setColor(color)
+              .setTitle(`Status of ${resultData['host']}`)
+              .setDescription(':green_circle: Server is online')
+              .setThumbnail(
+                  `https://api.mcstatus.io/v2/icon/${resultData['host']}`
+              )
+              .addFields(
+                  {
+                    name: 'Version',
+                    value: `${resultData['version']['name_clean']}`,
+                  },
+                  {
+                    name: `Players online: ${resultData['players']['online']}`,
+                    value: `${playerData}`,
+                  },
+                  {
+                    name: 'Max players',
+                    value: `${resultData['players']['max']}`,
+                  },
+                  {
+                    name: 'Motd',
+                    value: `${resultData['motd']['clean']}`,
+                  }
+              )
+              .setTimestamp();
 
-            .setTimestamp();
-          interaction.reply({ embeds: [status] });
+          const originalMessage = await interaction.reply({ embeds: [status], fetchReply: true });
+          await saveServerInfo(
+              guildId,
+              channelId,
+              originalMessage.id,
+              serverIp,
+              port
+          );
+
+
         } else {
-          const status1 = new EmbedBuilder()
-            .setColor(color)
-            .setTitle(`Status van ${resultData["host"]}`)
-            .setDescription(":red_circle: Server is offline")
-            .addFields({
-              name: " ",
-              value: `Stuur een bericht naar de server owner!`,
-            })
-            .setTimestamp();
-          interaction.reply({ embeds: [offline] });
+          const offline = new EmbedBuilder()
+              .setColor(color)
+              .setTitle(`Status of ${resultData['host']}`)
+              .setDescription(':red_circle: Server is offline')
+              .setTimestamp();
+
+          const originalMessage = await interaction.reply({ embeds: [offline], fetchReply: true });
+          await saveServerInfo(
+              guildId,
+              channelId,
+              originalMessage.id,
+              serverIp,
+              port
+          );
 
         }
-      })
-      .catch((error) => {
-        console.log(error);
+      } catch (error) {
+        console.error(error);
+      }
+
+    async function saveServerInfo(serverId, channelId, messageId, serverIp, port) {
+      try {
+        await db.query(
+            `INSERT INTO server_status (serverId, channelId, messageId, serverIp, port) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE channelId = VALUES(channelId), messageId = VALUES(messageId), serverIp = VALUES(serverIp), port = VALUES(port)`,
+            [serverId, channelId, messageId, serverIp, port]
+        );
+      } catch (error) {
+        console.error('Error saving server info:', error);
+      }
+    }
+
+    async function getServerInfo(serverId) {
+      return new Promise((resolve, reject) => {
+        db.query(
+            `SELECT * FROM server_status WHERE serverId = ?`,
+            [serverId],
+            (err, rows) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(rows.length > 0 ? rows[0] : null);
+              }
+            }
+        );
       });
+    }
+
+    // check if server is already in the database
+    async function checkServerInDatabase(serverId) {
+      return new Promise((resolve, reject) => {
+        db.query(
+            `SELECT * FROM server_status WHERE serverId = ?`,
+            [serverId],
+            (err, rows) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(rows.length > 0 ? rows[0] : null);
+              }
+            }
+        );
+      });
+    }
+
+    // delete server from database
+    async function deleteServerFromDatabase(serverId) {
+      return new Promise((resolve, reject) => {
+        db.query(
+            `DELETE FROM server_status WHERE serverId = ?`,
+            [serverId],
+            (err) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            }
+        );
+      });
+    }
   },
 };
