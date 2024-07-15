@@ -10,14 +10,14 @@ const {
 const options = { query: true };
 
 module.exports = {
-  name: 'mc',
-  description: 'pings my mc server!',
+  name: 'serverstatus',
+  description: 'Pings a Minecraft server and returns its status! The status is updated every minute.',
   testOnly: false,
   deleted: false,
   options: [
     {
       name: 'server_ip',
-      description: 'The ip of the Minecraft server',
+      description: 'The IP of the Minecraft server',
       required: true,
       type: ApplicationCommandOptionType.String,
     },
@@ -25,6 +25,7 @@ module.exports = {
       name: 'port',
       description: 'The port of the Minecraft server',
       required: true,
+      default: 25565,
       type: ApplicationCommandOptionType.Integer,
     },
   ],
@@ -34,7 +35,6 @@ module.exports = {
    * @param {Interaction} interaction
    */
   callback: async (client, interaction) => {
-    console.log('mc command called');
 
     const serverIp = interaction.options.get('server_ip').value;
     const port = interaction.options.get('port').value;
