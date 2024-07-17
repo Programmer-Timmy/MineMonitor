@@ -1,6 +1,7 @@
 const mcs = require('node-mcstatus');
 const db = require('../../utils/databaseConnection.js');
 const { EmbedBuilder, Client } = require('discord.js');
+const {deleteServerFromDatabase} = require("../../utils/databaseFunctions");
 
 const options = { timeout: 5000, enableSRV: true };
 
@@ -15,6 +16,14 @@ const updateServerStatus = async (client) => {
         if (serverStatuses.length !== 0) {
             // Iterate through each server status
             for (const serverStatus of serverStatuses) {
+                if (!await checkIfServerExists(client, serverStatus.serverId, serverStatus.channelId, serverStatus.messageId)) {
+                    console.log(`Server, channel, or message does not exist for serverId ${serverStatus.serverId}`);
+
+                    // Delete the server status from the database
+                    await deleteServerFromDatabase(serverStatus.serverId);
+                    continue;
+                }
+
                 const {serverId, channelId, messageId, serverIp, port} = serverStatus;
 
                 try {
@@ -149,5 +158,27 @@ async function updateDatabase(serverId, channelId, messageId, serverIp, port) {
 
 module.exports = (client) => {
     // Ensure client is retained in the closure scope
-    setInterval(() => updateServerStatus(client), 300000); // Example: Update every 5 minutes
+    setInterval(() => updateServerStatus(client), 6000); // Example: Update every 5 minutes
 };
+
+/**
+ * Check if the channel, or message exists in discord
+ *
+ * @param {string} serverId The ID of the server
+ * @param {string} channelId The ID of the channel
+ * @param {string} messageId The ID of the message
+ *
+ * @returns {boolean} Whether the server, channel, or message exists
+ */
+async function checkIfServerExists(client, serverId, channelId, messageId) {
+    try {
+        const channel = await client.channels.fetch(channelId);
+        if (messageId) {
+            const message = await channel.messages.fetch(messageId);
+            return !!message;
+        }
+        return !!channel;
+    } catch (error) {
+        return false;
+    }
+}
