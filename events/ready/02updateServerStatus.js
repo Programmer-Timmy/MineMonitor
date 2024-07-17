@@ -149,5 +149,5 @@ async function updateDatabase(serverId, channelId, messageId, serverIp, port) {
 
 module.exports = (client) => {
     // Ensure client is retained in the closure scope
-    setInterval(() => updateServerStatus(client), 60000); // Example: Update every 60 seconds
+    setInterval(() => updateServerStatus(client), 300000); // Example: Update every 5 minutes
 };

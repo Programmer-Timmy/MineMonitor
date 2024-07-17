@@ -1,21 +1,20 @@
 {
-  "name": "discordt-minecraft-bot",
+  "name": "MineMonitor",
   "version": "1.0.0",
-  "description": "",
+  "description": "A discord bot that monitors your or any other minecraft server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Programmer-timmy",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^14.11.0",
     "dotenv": "^16.1.4",
     "minecraft-server-util": "^5.4.4",
     "mysql": "^2.18.1",
-    "mysql2": "^3.10.2",
-    "node-mcstatus": "^1.1.0",
-    "sqlite3": "^5.1.7"
+    "node-mcstatus": "^1.1.0"
   }
 }
