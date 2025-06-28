@@ -1,5 +1,6 @@
 const {PermissionsBitField, ApplicationCommandOptionType} = require("discord.js");
 const {checkServerInDatabase, deleteServerFromDatabase, getServerInfo} = require("../../utils/databaseFunctions");
+const ServerStatus = require("../../controllers/ServerStatus");
 module.exports = {
     name: 'serverclear',
     description: 'Clears the Minecraft server status from the database and removes the status message.',
@@ -15,18 +16,18 @@ module.exports = {
     callback: async (client, interaction) => {
         const serverId = interaction.guildId;
 
-        if (!await checkServerInDatabase(serverId)) {
+        if (!await ServerStatus.get(serverId)) {
             return interaction.reply({
                 content: 'This server is not in the database.',
                 ephemeral: true,
             });
         }
 
-        const server = await getServerInfo(serverId);
+        const server = await ServerStatus.get(serverId);
 
         await deleteMessage(client, server.channelId, server.messageId);
 
-        await deleteServerFromDatabase(serverId);
+        await ServerStatus.delete(serverId);
 
         interaction.reply({
             content: 'Server status cleared from the database.',

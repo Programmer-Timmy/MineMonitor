@@ -2,6 +2,7 @@ const mcs = require('node-mcstatus');
 const db = require('../../utils/databaseConnection.js');
 const { EmbedBuilder, Client } = require('discord.js');
 const {deleteServerFromDatabase} = require("../../utils/databaseFunctions");
+const ServerStatus = require("../../controllers/ServerStatus");
 
 const options = { timeout: 5000, enableSRV: true };
 
@@ -20,7 +21,7 @@ const updateServerStatus = async (client) => {
                     console.log(`Server, channel, or message does not exist for serverId ${serverStatus.serverId}`);
 
                     // Delete the server status from the database
-                    await deleteServerFromDatabase(serverStatus.serverId);
+                    await ServerStatus.delete(serverStatus.serverId);
                     continue;
                 }
 

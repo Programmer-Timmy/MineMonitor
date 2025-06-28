@@ -1,5 +1,4 @@
 const mcs = require('node-mcstatus');
-const db = require('../../utils/databaseConnection.js');
 const {deleteServerFromDatabase} = require('../../utils/databaseFunctions.js');
 const {
     Client,
@@ -9,6 +8,7 @@ const {
     PermissionsBitField,
 } = require('discord.js');
 const {saveServerInfo, checkServerInDatabase} = require("../../utils/databaseFunctions");
+const ServerStatus = require("../../controllers/ServerStatus");
 
 const options = {query: true};
 
@@ -60,10 +60,10 @@ module.exports = {
         }
 
         // if the server is already in the database, delete the old message and add a new one
-        const serverInDatabase = await checkServerInDatabase(guildId);
+        const serverInDatabase = await ServerStatus.get(guildId);
         if (serverInDatabase) {
             try {
-                await deleteServerFromDatabase(guildId)
+                await ServerStatus.delete(guildId);
                 const channel = await client.channels.fetch(serverInDatabase.channelId);
                 const message = await channel.messages.fetch(serverInDatabase.messageId);
                 if (message) {
@@ -84,7 +84,7 @@ module.exports = {
 
             const sentMessage = await interaction.reply({embeds: [embed], fetchReply: true});
 
-            await saveServerInfo(guildId, channelId, sentMessage.id, serverIp, port);
+            await ServerStatus.insert(guildId, channelId, sentMessage.id, serverIp, port);
 
         } catch (error) {
             console.error(error);
