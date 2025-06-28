@@ -62,5 +62,10 @@ module.exports = async (client, interaction) => {
     await commandObject.callback(client, interaction);
   } catch (error) {
     console.log(`There was an error running this command: ${error}`);
+    interaction.reply({
+      content: "There was an error running this command.",
+
+      ephemeral: true,
+    });
   }
 };

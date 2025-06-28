@@ -13,6 +13,10 @@ module.exports = (client) => {
         client.on(eventName, async (arg) => {
             for (const eventFile of eventFiles) {
                 const eventFunction = require(eventFile);
+                if (typeof eventFunction !== 'function') {
+                    console.error(`Event file ${eventFile} does not export a function.`);
+                    continue;
+                }
                 await eventFunction(client, arg);
             }
         })

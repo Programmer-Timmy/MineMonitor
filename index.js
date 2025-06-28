@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const { Client, GatewayIntentBits } = require("discord.js");
 const eventHandeler = require('./handlers/eventHandeler');
+const {markWhitelistRequestAsRejected, markWhitelistRequestAsAccepted} = require("./utils/databaseFunctions");
 
 const client = new Client({
   intents: [
