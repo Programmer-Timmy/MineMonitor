@@ -1,5 +1,4 @@
-const {PermissionsBitField, ApplicationCommandOptionType} = require("discord.js");
-const {checkServerInDatabase, deleteServerFromDatabase, getServerInfo} = require("../../utils/databaseFunctions");
+const {PermissionsBitField} = require("discord.js");
 const ServerStatus = require("../../controllers/ServerStatus");
 module.exports = {
     name: 'serverclear',

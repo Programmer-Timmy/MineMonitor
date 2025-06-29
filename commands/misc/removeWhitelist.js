@@ -2,9 +2,8 @@ const {
     Client,
     Interaction,
     PermissionsBitField,
-    ApplicationCommandOptionType,
 } = require('discord.js');
-const { removeWhitelistSetup, checkWhitelistSetup, removeWhitelistRequests} = require('../../utils/databaseFunctions');
+const WhitelistSetups = require("../../controllers/WhitelistSetups");
 
 module.exports = {
     name: 'removewhitelist',
@@ -21,7 +20,7 @@ module.exports = {
     callback: async (client, interaction) => {
         const serverId = interaction.guildId;
 
-        const exists = await checkWhitelistSetup(serverId);
+        const exists = await WhitelistSetups.get(serverId);
         if (!exists) {
             return interaction.reply({
                 content: 'No whitelist setup found for this server.',
@@ -29,8 +28,8 @@ module.exports = {
             });
         }
 
-        await removeWhitelistSetup(serverId);
-        await removeWhitelistRequests(serverId);
+        await WhitelistSetups.delete(serverId);
+        await WhitelistSetups.delete(serverId);
 
         return interaction.reply({
             content: '✅ Whitelist setup successfully removed.',

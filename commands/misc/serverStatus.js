@@ -1,5 +1,4 @@
 const mcs = require('node-mcstatus');
-const {deleteServerFromDatabase} = require('../../utils/databaseFunctions.js');
 const {
     Client,
     Interaction,
@@ -7,7 +6,6 @@ const {
     EmbedBuilder,
     PermissionsBitField,
 } = require('discord.js');
-const {saveServerInfo, checkServerInDatabase} = require("../../utils/databaseFunctions");
 const ServerStatus = require("../../controllers/ServerStatus");
 
 const options = {query: true};

@@ -1,7 +1,6 @@
 const mcs = require('node-mcstatus');
 const db = require('../../utils/databaseConnection.js');
 const { EmbedBuilder, Client } = require('discord.js');
-const {deleteServerFromDatabase} = require("../../utils/databaseFunctions");
 const ServerStatus = require("../../controllers/ServerStatus");
 
 const options = { timeout: 5000, enableSRV: true };

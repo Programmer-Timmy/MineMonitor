@@ -1,9 +1,6 @@
-const {
-    getWhitelistSetup,
-    markWhitelistRequestAsRejected,
-    markWhitelistRequestAsAccepted
-} = require("../../utils/databaseFunctions");
 const {Rcon} = require("rcon-client");
+const WhitelistRequest = require("../../controllers/WhitelistRequests");
+const WhitelistSetups = require("../../controllers/WhitelistSetups");
 const startInteractionCreate = async (client) => {
     try {
         client.on('interactionCreate', async (interaction) => {
@@ -17,7 +14,7 @@ const startInteractionCreate = async (client) => {
 
                 // Optional: give role
                 const member = await interaction.guild.members.fetch(userId).catch(() => null);
-                const whitelistSetup = await getWhitelistSetup(interaction.guildId);
+                const whitelistSetup = await WhitelistSetups.get(interaction.guildId);
 
                 if (!whitelistSetup) {
                     return interaction.followUp({
@@ -77,7 +74,7 @@ const startInteractionCreate = async (client) => {
                     });
                 }
 
-                await markWhitelistRequestAsAccepted(userId, username);
+                await WhitelistRequest.markRequest(userId, username, true);
                 await interaction.reply({
                     content: `✅ Whitelist request for **${username}** accepted.`,
                     ephemeral: true,
@@ -85,7 +82,7 @@ const startInteractionCreate = async (client) => {
 
             } else if (action === 'reject_whitelist') {
 
-                const whitelistSetup = await getWhitelistSetup(interaction.guildId);
+                const whitelistSetup = await WhitelistSetups.get(interaction.guildId);
 
                 if (!whitelistSetup) {
                     return interaction.followUp({
@@ -112,7 +109,7 @@ const startInteractionCreate = async (client) => {
                     });
                 }
 
-                await markWhitelistRequestAsRejected(userId, username);
+                await WhitelistRequest.markRequest(userId, username, false);
                 await interaction.reply({
                     content: `❌ Whitelist request for **${username}** rejected.`,
                     ephemeral: true,

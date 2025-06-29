@@ -4,7 +4,7 @@ const {
     ApplicationCommandOptionType,
     PermissionsBitField,
 } = require('discord.js');
-const {saveWhitelistSetup, checkWhitelistSetup} = require("../../utils/databaseFunctions");
+const WhitelistSetups = require("../../controllers/WhitelistSetups");
 
 module.exports = {
     name: 'setupwhitelist',
@@ -56,7 +56,7 @@ module.exports = {
         const whitelistRole = interaction.options.get('whitelist_role')?.role.id || null;
         const rconPort = interaction.options.get('rcon_port')?.value || 25575;
         const serverId = interaction.guildId; // Get the Discord server (Guild) ID
-        if (await checkWhitelistSetup(serverId)) {
+        if (await WhitelistSetups.get(serverId)) {
             return interaction.reply({
                 content: 'A whitelist setup already exists for this server. Please remove it by using the `/removewhitelist` command before setting up a new one.',
                 ephemeral: true,
@@ -80,7 +80,7 @@ module.exports = {
             });
         }
         // Save the server info to the database
-        await saveWhitelistSetup(
+        await WhitelistSetups.insert(
             serverId,
             serverIp,
             rconPort,
