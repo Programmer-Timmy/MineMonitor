@@ -7,9 +7,9 @@ const {
     ButtonBuilder,
     ButtonStyle,
 } = require('discord.js');
-const {getMinecraftUUID} = require("../../utils/mcApi");
-const WhitelistSetups = require("../../controllers/WhitelistSetups");
-const WhitelistRequests = require("../../controllers/WhitelistRequests");
+const {getMinecraftUUID} = require("../../../utils/mcApi");
+const WhitelistSetups = require("../../../controllers/WhitelistSetups");
+const WhitelistRequests = require("../../../controllers/WhitelistRequests");
 
 module.exports = {
     name: 'whitelistme',

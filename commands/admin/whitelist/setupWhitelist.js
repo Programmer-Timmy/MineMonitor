@@ -4,7 +4,7 @@ const {
     ApplicationCommandOptionType,
     PermissionsBitField,
 } = require('discord.js');
-const WhitelistSetups = require("../../controllers/WhitelistSetups");
+const WhitelistSetups = require("../../../controllers/WhitelistSetups");
 
 module.exports = {
     name: 'setupwhitelist',

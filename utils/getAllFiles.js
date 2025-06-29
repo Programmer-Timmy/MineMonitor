@@ -1,24 +1,34 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = (directory, foldersOnly = false) => {
-    let fileNames = [];
+/**
+ * Recursively retrieves all files or folders in a directory.
+ * @param {string} directory - The starting directory.
+ * @param {boolean} foldersOnly - Whether to return only folders.
+ * @returns {string[]} - List of file or folder paths.
+ */
+module.exports = function getAllFiles(directory, foldersOnly = false) {
+    const results = [];
 
-    const files = fs.readdirSync(directory, { withFileTypes:  true});
+    const items = fs.readdirSync(directory, { withFileTypes: true });
 
-    for (const file of files) {
-        const filePath = path.join(directory, file.name);
+    for (const item of items) {
+        const fullPath = path.join(directory, item.name);
 
-        if(foldersOnly){
-            if (file.isDirectory()) {
-                fileNames.push(filePath);
-            } 
-        } else {
-            if (file.isFile()) {
-                fileNames.push(filePath);
+        if (item.isDirectory()) {
+            // If foldersOnly is true, push the folder
+            if (foldersOnly) {
+                results.push(fullPath);
             }
+
+            // Recurse into subdirectory regardless
+            const nested = getAllFiles(fullPath, foldersOnly);
+            results.push(...nested);
+        } else if (!foldersOnly) {
+            // Only add files when foldersOnly is false
+            results.push(fullPath);
         }
     }
 
-    return fileNames;
-}
+    return results;
+};
