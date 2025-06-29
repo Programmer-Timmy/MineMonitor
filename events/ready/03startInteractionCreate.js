@@ -70,7 +70,8 @@ const startInteractionCreate = async (client) => {
 
                 const user = await client.users.fetch(userId).catch(() => null);
                 if (user) {
-                    await user.send(`Your whitelist request for **${username}** has been accepted by an admin.`).catch(() => {
+                    await user.send(`Your whitelist request for **${username}** in **${interaction.guild.name}** has been accepted by an admin.`).catch(error => {
+                        console.error(`Failed to send acceptance message to user ${userId}: ${error}`);
                     });
                 }
 
@@ -105,7 +106,8 @@ const startInteractionCreate = async (client) => {
                 // Optional: notify the user
                 const user = await client.users.fetch(userId).catch(() => null);
                 if (user) {
-                    await user.send(`Your whitelist request for **${username}** has been rejected by an admin.`).catch(() => {
+                    await user.send(`Your whitelist request for **${username}** in **${interaction.guild.name}** has been rejected by an admin.`).catch(() => {
+                        console.error(`Failed to send rejection message to user ${userId}: ${error}`);
                     });
                 }
 
