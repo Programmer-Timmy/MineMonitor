@@ -2,16 +2,16 @@ name: Publish Docker Image
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
     tags:
-      - 'v*'   # matches tags like v1.2.3, v2.0.0, etc.
+      - 'v*'  # adjust if your tags have different format
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
@@ -25,16 +25,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Set owner and repo variables
+      - name: Set image name and tag
         id: meta
         run: |
-          echo "OWNER=$(echo '${GITHUB_REPOSITORY%%/*}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-          echo "REPO=$(echo '${GITHUB_REPOSITORY##*/}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+          OWNER=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          REPO=$(echo "${GITHUB_REPOSITORY##*/}" | tr '[:upper:]' '[:lower:]')
 
-      - name: Determine tags and image names
-        id: tags
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION_TAG="${GITHUB_REF#refs/tags/}"
             IMAGE_TAG="ghcr.io/$OWNER/$REPO:$VERSION_TAG"
             LATEST_TAG="ghcr.io/$OWNER/$REPO:latest"
@@ -44,23 +41,25 @@ jobs:
           else
             RANDOM_ID=$(head /dev/urandom | tr -dc a-z0-9 | head -c 8)
             IMAGE_TAG="ghcr.io/$OWNER/$REPO:beta-$RANDOM_ID"
-            BETA_TAG="ghcr.io/$OWNER/$REPO:beta"
+            LATEST_TAG="ghcr.io/$OWNER/$REPO:beta"
             echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
             echo "beta_tag=$BETA_TAG" >> $GITHUB_OUTPUT
           fi
 
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
       - name: Build Docker image
-        run: docker build . --file Dockerfile --tag ${{ steps.tags.outputs.image_tag }}
+        run: docker build . --file Dockerfile --tag $IMAGE_TAG
 
-      - name: Push Docker image(s)
+      - name: Push Docker image
+        run: docker push $IMAGE_TAG
+
+      - name: Push latest tag if release
+        if: ${{ env.LATEST_TAG != '' }}
         run: |
-          docker push ${{ steps.tags.outputs.image_tag }}
-
-          # If beta tag present, push floating beta tag too
-          if [ -n "${{ steps.tags.outputs.beta_tag }}" ]; then
-            docker tag ${{ steps.tags.outputs.image_tag }} ${{ steps.tags.outputs.beta_tag }}
-            docker push ${{ steps.tags.outputs.beta_tag }}
-          fi
+          docker tag $IMAGE_TAG $LATEST_TAG
+          docker push $LATEST_TAG
 
       - name: Update VERSION file and push (for releases)
         if: startsWith(github.ref, 'refs/tags/')
