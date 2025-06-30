@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     tags:
-      - 'v*'
+      - 'v*'  # adjust if your tags have different format
 
 jobs:
   build-and-push:
@@ -30,21 +30,28 @@ jobs:
         run: |
           OWNER=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
           REPO=$(echo "${GITHUB_REPOSITORY##*/}" | tr '[:upper:]' '[:lower:]')
-          
-          # Determine if this is a tag push
-          if [ -n "${GITHUB_REF##refs/tags/}" ] && [ "${GITHUB_REF}" != "${GITHUB_REF##refs/tags/}" ]; then
-            # It's a tag push
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION_TAG="${GITHUB_REF#refs/tags/}"
             IMAGE_TAG="ghcr.io/$OWNER/$REPO:$VERSION_TAG"
+            LATEST_TAG="ghcr.io/$OWNER/$REPO:latest"
           else
-            # It's a branch push (like main)
-            IMAGE_TAG="ghcr.io/$OWNER/$REPO:prerelease-latest"
+            RANDOM_ID=$(head /dev/urandom | tr -dc a-z0-9 | head -c 8)
+            IMAGE_TAG="ghcr.io/$OWNER/$REPO:prerelease-$RANDOM_ID"
+            LATEST_TAG="ghcr.io/$OWNER/$REPO:prerelease-latest"
           fi
 
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: docker build . --file Dockerfile --tag $IMAGE_TAG
 
       - name: Push Docker image
         run: docker push $IMAGE_TAG
+
+      - name: Push latest tag if release
+        if: ${{ env.LATEST_TAG != '' }}
+        run: |
+          docker tag $IMAGE_TAG $LATEST_TAG
+          docker push $LATEST_TAG
