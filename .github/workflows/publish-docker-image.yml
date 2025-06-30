@@ -37,8 +37,8 @@ jobs:
             LATEST_TAG="ghcr.io/$OWNER/$REPO:latest"
           else
             RANDOM_ID=$(head /dev/urandom | tr -dc a-z0-9 | head -c 8)
-            IMAGE_TAG="ghcr.io/$OWNER/$REPO:prerelease-$RANDOM_ID"
-            LATEST_TAG="ghcr.io/$OWNER/$REPO:prerelease-latest"
+            IMAGE_TAG="ghcr.io/$OWNER/$REPO:beta-$RANDOM_ID"
+            LATEST_TAG="ghcr.io/$OWNER/$REPO:beta"
           fi
 
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
