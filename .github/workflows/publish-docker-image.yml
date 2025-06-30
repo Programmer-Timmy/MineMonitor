@@ -3,7 +3,6 @@ name: Publish Docker Image
 on:
   push:
     branches: [main]
-  push:
     tags:
       - 'v*'   # matches tags like v1.2.3, v2.0.0, etc.
 
