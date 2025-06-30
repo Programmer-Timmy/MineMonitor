@@ -3,9 +3,8 @@ name: Publish Docker Image
 on:
   push:
     branches: [ "main" ]
-  # Trigger on new tags pushed
-  tags:
-    - 'v*'  # or '*' if you want all tags, but usually version tags start with v
+    tags:
+      - 'v*'
 
 jobs:
   build-and-push:
