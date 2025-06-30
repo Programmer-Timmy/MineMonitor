@@ -40,15 +40,10 @@ jobs:
             VERSION_TAG="${GITHUB_REF#refs/tags/}"
             IMAGE_TAG="ghcr.io/$OWNER/$REPO:$VERSION_TAG"
             LATEST_TAG="ghcr.io/$OWNER/$REPO:latest"
-            echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
-            echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-            echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
           else
             RANDOM_ID=$(head /dev/urandom | tr -dc a-z0-9 | head -c 8)
             IMAGE_TAG="ghcr.io/$OWNER/$REPO:beta-$RANDOM_ID"
             LATEST_TAG="ghcr.io/$OWNER/$REPO:beta"
-            echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-            echo "beta_tag=$BETA_TAG" >> $GITHUB_OUTPUT
           fi
 
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
@@ -65,23 +60,3 @@ jobs:
         run: |
           docker tag $IMAGE_TAG $LATEST_TAG
           docker push $LATEST_TAG
-
-      - name: Update VERSION file and push (for releases)
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          echo "${{ steps.tags.outputs.version_tag }}" > VERSION
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add VERSION
-          git commit -m "Update VERSION to ${{ steps.tags.outputs.version_tag }}" || echo "No changes to commit"
-          git push
-
-      - name: Update BETA_VERSION file and push (for beta builds)
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "${{ steps.tags.outputs.image_tag }}" > BETA_VERSION
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add BETA_VERSION
-          git commit -m "Update BETA_VERSION to ${{ steps.tags.outputs.image_tag }}" || echo "No changes to commit"
-          git push
