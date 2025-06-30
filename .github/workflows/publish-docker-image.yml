@@ -67,6 +67,7 @@ jobs:
           echo "${{ steps.tags.outputs.version_tag }}" > VERSION
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+          git remote set-url origin https://${{ secrets.GHCR_TOKEN }}@github.com/${{ github.repository }}.git
           git add VERSION
           git commit -m "Update VERSION to ${{ steps.tags.outputs.version_tag }}" || echo "No changes to commit"
           git push
@@ -77,6 +78,8 @@ jobs:
           echo "${{ steps.tags.outputs.image_tag }}" > BETA_VERSION
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+          git remote set-url origin https://${{ secrets.GHCR_TOKEN }}@github.com/${{ github.repository }}.git
           git add BETA_VERSION
           git commit -m "Update BETA_VERSION to ${{ steps.tags.outputs.image_tag }}" || echo "No changes to commit"
           git push
+      
