@@ -61,7 +61,7 @@ module.exports = async (client, interaction) => {
 
     await commandObject.callback(client, interaction);
   } catch (error) {
-    console.log(`There was an error running this command: ${error}`);
+    console.log(`There was an error running this command: ${error}. On command: ${interaction.commandName}. Line: ${error.stack.split("\n")[1]}`);
     interaction.reply({
       content: "There was an error running this command.",
 

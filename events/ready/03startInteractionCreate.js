@@ -12,6 +12,13 @@ const startInteractionCreate = async (client) => {
 
             if (action === 'accept_whitelist') {
 
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({
+                        content: '❌ You do not have permission to accept whitelist requests.',
+                        ephemeral: true,
+                    });
+                }
+
                 // Optional: give role
                 const member = await interaction.guild.members.fetch(userId).catch(() => null);
                 const whitelistSetup = await WhitelistSetups.get(interaction.guildId);
@@ -82,6 +89,13 @@ const startInteractionCreate = async (client) => {
                 });
 
             } else if (action === 'reject_whitelist') {
+
+                if (!interaction.member.permissions.has('Administrator')) {
+                    return interaction.reply({
+                        content: '❌ You do not have permission to accept whitelist requests.',
+                        ephemeral: true,
+                    });
+                }
 
                 const whitelistSetup = await WhitelistSetups.get(interaction.guildId);
 

@@ -1,21 +1,34 @@
-import {Rcon} from "rcon-client";
+const {Rcon} = require("rcon-client");
 
 class MinecraftRcon {
 
+    /**
+     * Creates an instance of MinecraftRcon.
+     * @param serverIp
+     * @param serverPort
+     * @param rconPassword
+     * @returns {Promise<unknown>}
+     */
     constructor(serverIp, serverPort, rconPassword) {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.rconPassword = rconPassword;
 
+
         return new Promise((resolve, reject) => {
             const resolver = this
-            this.rconClient = new Rcon(this.serverIp, this.serverPort, this.rconPassword).connect().then(() => {
-                console.log("Connected to Minecraft RCON server");
-                resolve(resolver);
-            }).catch((error) => {
-                console.error("Failed to connect to Minecraft RCON server:", error);
-                reject(error);
-            });
+            this.rconClient = Rcon.connect({
+                host: this.serverIp,
+                port: this.serverPort || 25575,
+                password: this.rconPassword,
+            }).then(() => {
+                    console.log(`✅ Connected to Minecraft RCON server at ${this.serverIp}:${this.serverPort}`);
+                    resolve(resolver);
+                })
+                .catch((error) => {
+                    console.error(`❌ Failed to connect to Minecraft RCON server: ${error.message}`);
+                    reject(error);
+                });
         });
     }
 
@@ -45,8 +58,6 @@ class MinecraftRcon {
         const command = `whitelist ${action} ${username}`;
         return this._sendCommand(command);
     }
-
-
-
-
 }
+
+module.exports = MinecraftRcon;

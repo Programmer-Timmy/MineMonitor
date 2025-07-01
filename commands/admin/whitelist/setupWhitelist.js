@@ -5,7 +5,7 @@ const {
     PermissionsBitField,
 } = require('discord.js');
 const WhitelistSetups = require("../../../controllers/WhitelistSetups");
-
+const MinecraftRcon = require("../../../controllers/MinecraftRcon");
 module.exports = {
     name: 'setupwhitelist',
     description: 'Sets up a command that allows users to whitelist themselves on a Minecraft server.',
@@ -38,7 +38,7 @@ module.exports = {
             type: ApplicationCommandOptionType.Integer,
         },
         {
-            name: 'whitelist_role',
+            name: 'whitelisted_role',
             description: 'The role that will be given to users when they are whitelisted',
             required: false,
             type: ApplicationCommandOptionType.Role,
@@ -56,15 +56,13 @@ module.exports = {
         const whitelistRole = interaction.options.get('whitelist_role')?.role.id || null;
         const rconPort = interaction.options.get('rcon_port')?.value || 25575;
         const serverId = interaction.guildId; // Get the Discord server (Guild) ID
+
         if (await WhitelistSetups.get(serverId)) {
             return interaction.reply({
                 content: 'A whitelist setup already exists for this server. Please remove it by using the `/removewhitelist` command before setting up a new one.',
                 ephemeral: true,
             });
         }
-
-        console.log(`Setting up whitelist for server: ${serverIp}, RCON Port: ${rconPort}, Admin Channel: ${adminChannel}, Whitelist Role: ${whitelistRole ? whitelistRole : 'None'} for server ID: ${serverId}`);
-
 
         if (!isValidIP(serverIp) && !isValidHostname(serverIp)) {
             return interaction.reply({
@@ -79,6 +77,24 @@ module.exports = {
                 ephemeral: true,
             });
         }
+
+        // Check if the admin channel is valid and accessible
+        const channel = await client.channels.fetch(adminChannel).catch(() => null);
+        if (!channel || !(await checkAccessToChannel(channel))) {
+            return interaction.reply({
+                content: 'Invalid admin channel provided! Please provide a valid text channel where the bot can send messages.',
+                ephemeral: true,
+            });
+        }
+
+        // Check if the RCON connection is valid
+        if (!(await checkRconAccess(serverIp, rconPort, rconPassword))) {
+            return interaction.reply({
+                content: 'Failed to connect to the RCON server. Please check the IP, port, and password.',
+                ephemeral: true,
+            });
+        }
+
         // Save the server info to the database
         await WhitelistSetups.insert(
             serverId,
@@ -110,3 +126,37 @@ function isValidPort(port) {
     return Number.isInteger(port) && port >= 0 && port <= 65535;
 }
 
+async function checkAccessToChannel(channel) {
+    if (!channel || !channel.isTextBased()) {
+        return false;
+    }
+
+    try {
+        await channel.guild.members.fetchMe(); // Make sure bot's member data is available
+    } catch (err) {
+        console.error("Failed to fetch bot member:", err);
+        return false;
+    }
+
+    const permissions = channel.permissionsFor(channel.guild.members.me);
+    if (!permissions) {
+        return false; // No permissions available
+    }
+
+    if (!permissions.has('ViewChannel') || !permissions.has('SendMessages')) {
+        return false; // Lacks basic access
+    }
+
+    return true;
+}
+
+
+async function checkRconAccess(serverIp, rconPort, rconPassword) {
+    try {
+        await new MinecraftRcon(serverIp, rconPort, rconPassword)
+        return true
+    } catch (error) {
+        console.error(`Failed to connect to RCON server at ${serverIp}:${rconPort} - ${error.message}`);
+        return false; // If there's an error, return false
+    }
+}
