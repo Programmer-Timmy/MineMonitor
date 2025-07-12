@@ -16,6 +16,7 @@ module.exports = {
     description: 'Request to be whitelisted on the Minecraft server.',
     testOnly: false,
     deleted: false,
+    guildOnly: true,
     options: [
         {
             name: 'minecraft_username',

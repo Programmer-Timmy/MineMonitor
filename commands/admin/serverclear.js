@@ -5,6 +5,7 @@ module.exports = {
     description: 'Clears the Minecraft server status from the database and removes the status message.',
     testOnly: false,
     deleted: false,
+    guildOnly: true,
     permissionsRequired: [PermissionsBitField.Flags.Administrator],
 
     /**

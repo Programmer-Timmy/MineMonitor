@@ -15,6 +15,7 @@ module.exports = {
     description: 'Pings a Minecraft server and returns its status! The status is updated every minute.',
     testOnly: false,
     deleted: false,
+    guildOnly: true,
     permissionsRequired: [PermissionsBitField.Flags.Administrator],
     options: [
         {

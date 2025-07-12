@@ -18,7 +18,7 @@ module.exports = {
      * @param {Interaction} interaction
      */
     callback: async (client, interaction) => {
-        const serverId = interaction.guildId;
+        const serverId = interaction.guildId; // Get the Discord server (Guild) ID
 
         const exists = await WhitelistSetups.get(serverId);
         if (!exists) {

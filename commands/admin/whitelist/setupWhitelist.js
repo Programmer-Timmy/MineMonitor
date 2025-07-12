@@ -11,6 +11,7 @@ module.exports = {
     description: 'Sets up a command that allows users to whitelist themselves on a Minecraft server.',
     testOnly: false,
     deleted: false,
+    guildOnly: true,
     permissionsRequired: [PermissionsBitField.Flags.Administrator],
     options: [
         {
@@ -153,6 +154,7 @@ async function checkAccessToChannel(channel) {
 
 async function checkRconAccess(serverIp, rconPort, rconPassword) {
     try {
+        console.log(`Attempting to connect to RCON server at ${serverIp}:${rconPort} with password ${rconPassword}`);
         await new MinecraftRcon(serverIp, rconPort, rconPassword)
         return true
     } catch (error) {

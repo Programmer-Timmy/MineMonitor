@@ -13,6 +13,16 @@ module.exports = async (client, interaction) => {
 
     if (!commandObject) return;
 
+    if (commandObject.guildOnly) {
+        if (!interaction.guild) {
+            interaction.reply({
+            content: "This command can only be used in a server.",
+            ephemeral: true,
+            });
+            return;
+        }
+    }
+
     if (commandObject.devOnly) {
       if (!devs.includes(interaction.member.id)) {
         interaction.reply({
