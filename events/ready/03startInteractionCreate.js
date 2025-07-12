@@ -36,34 +36,36 @@ const startInteractionCreate = async (client) => {
                     }
                 } catch (error) {
                     console.error(`Failed to add whitelist role: ${error}`);
-                    return interaction.followUp({
+                    return interaction.reply({
                         content: '❌ Failed to assign the whitelist role. Please check the server configuration.',
                         ephemeral: true,
                     });
                 }
 
-
                 // send rcon command to whitelist the user
-                try {
-                    const rcon = await Rcon.connect(
-                        {
-                            host: whitelistSetup.serverIp,
-                            port: whitelistSetup.rconPort || 25575,
-                            password: whitelistSetup.rconPassword,
-                        }
-                    )
 
-                    const response = await rcon.send(`whitelist add ${username}`);
-                    console.log(`RCON response: ${response}`);
-
-                    await rcon.end();
-                } catch (error) {
-                    console.error(`RCON error: ${error}`);
-                    return interaction.followUp({
-                        content: '❌ Failed to whitelist the user via RCON. Please check the server configuration.',
+                const rcon = await Rcon.connect(
+                    {
+                        host: whitelistSetup.serverIp,
+                        port: whitelistSetup.rconPort || 25575,
+                        password: whitelistSetup.rconPassword,
+                    }
+                ).catch((error) => {
+                    console.error(`Failed to connect to RCON server: ${error}`);
+                    interaction.reply({
+                        content: '❌ Failed to connect to the RCON server. Please check the server configuration.',
                         ephemeral: true,
                     });
-                }
+                    return null;
+                });
+
+                if (!rcon) return;
+
+                const response = await rcon.send(`whitelist add ${username}`);
+                console.log(`RCON response: ${response}`);
+
+                await rcon.end();
+
 
                 // remove old request embed from admin channel
                 const adminChannel = await interaction.guild.channels.fetch(whitelistSetup.adminChannel).catch(() => null);
